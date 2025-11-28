@@ -1,1 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<title>簡易前端登入頁</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+body { font-family: Arial; text-align: center; margin-top: 60px; }
+#profile { margin-top: 20px; }
+</style>
+</head>
+<body>
+<h2>三方登入測試（Front-end）</h2>
+
+<!-- 先留空 DIV -->
+<div id="g_id_onload_container"></div>
+
+<div id="profile"></div>
+
+<script>
+// 將敏感參數放在 JS 變數（不直接寫在 HTML）
+const CLIENT_ID = "YOUR_CLIENT_ID_HERE"; // 這裡還是需要 JS，但不直接在 HTML
+const CALLBACK_FN = "handleCredentialResponse";
+
+// 生成登入按鈕
+const container = document.getElementById('g_id_onload_container');
+const gDiv = document.createElement('div');
+gDiv.id = "g_id_onload";
+
+// 動態設定 data-* 屬性
+gDiv.setAttribute("data-client_id", CLIENT_ID);
+gDiv.setAttribute("data-callback", CALLBACK_FN);
+gDiv.setAttribute("data-auto_prompt", "false");
+
+// 放入 DOM
+container.appendChild(gDiv);
+
+// 動態生成標準登入按鈕
+const signinDiv = document.createElement('div');
+signinDiv.className = "g_id_signin";
+signinDiv.setAttribute("data-type", "standard");
+signinDiv.setAttribute("data-size", "large");
+container.appendChild(signinDiv);
+
+// callback function
+function handleCredentialResponse(response) {
+    const token = response.credential;
+    const payload = JSON.parse(atob(token.split('.')[1]));
+
+    document.getElementById('profile').innerHTML = `
+        <h3>登入成功</h3>
+        <p>姓名：${payload.name}</p>
+        <p>Email：${payload.email}</p>
+        <img src="${payload.picture}" width="80" />
+    `;
+
+    // 將 token 傳到後端
+    fetch("backend/api.js", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id_token: token })
+    }).then(r => r.text()).then(console.log);
+}
+</script>
+</body>
+</html>
 
