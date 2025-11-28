@@ -2,64 +2,69 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="UTF-8" />
-<title>Google 登入測試</title>
+<meta charset="UTF-8">
+<title>Google 登入按鈕示範</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-
 <style>
 body { font-family: Arial; text-align: center; margin-top: 60px; }
 #profile { margin-top: 20px; }
+button {
+    background-color: #4285F4;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 16px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+button:hover {
+    background-color: #357ae8;
+}
 </style>
 </head>
-
 <body>
 
-<h2>Google 第三方登入測試</h2>
+<h2>Google 登入按鈕示範</h2>
 
-<!-- 容器，之後用 JS 動態插入 -->
-<div id="google-login"></div>
+<!-- 自訂按鈕 -->
+<button id="google-login-btn">使用 Google 登入</button>
 
 <div id="profile"></div>
 
 <script>
-// ====== 你的 Google Client ID 放在 JS（比 HTML 更不容易被看到） ======
 const CLIENT_ID = "748226065324-j98190oau40mcgt6c91f5up6857ma8fj.apps.googleusercontent.com";
 
-// 等待 Google 身份服務載入完成
-window.onload = function () {
-    const container = document.getElementById("google-login");
-
-    // 動態生成 g_id_onload
-    const g_onload = document.createElement("div");
-    g_onload.id = "g_id_onload";
-    g_onload.setAttribute("data-client_id", CLIENT_ID);
-    g_onload.setAttribute("data-callback", "handleCredentialResponse");
-    g_onload.setAttribute("data-auto_prompt", "false");
-    container.appendChild(g_onload);
-
-    // 動態生成按鈕
-    const signin = document.createElement("div");
-    signin.className = "g_id_signin";
-    signin.setAttribute("data-type", "standard");
-    signin.setAttribute("data-size", "large");
-    container.appendChild(signin);
-};
-
-// ====== callback（Google 登入成功） ======
+// callback function
 function handleCredentialResponse(response) {
     const token = response.credential;
     const payload = JSON.parse(atob(token.split('.')[1]));
 
-    document.getElementById("profile").innerHTML = `
+    document.getElementById('profile').innerHTML = `
         <h3>登入成功</h3>
-        姓名：${payload.name}<br>
-        Email：${payload.email}<br>
-        <img src="${payload.picture}" width="80">
+        <p>姓名：${payload.name}</p>
+        <p>Email：${payload.email}</p>
+        <img src="${payload.picture}" width="80" />
     `;
 
-    // ⚠ GitHub Pages 無後端，所以這段暫不使用
-    // fetch("backend/api.js", { ... });
+    console.log("Google ID Token:", token);
 }
+
+// 初始化 Google 物件
+let googleAccounts;
+window.onload = function() {
+    googleAccounts = google.accounts.id;
+};
+
+// 監聽按鈕點擊
+document.getElementById('google-login-btn').addEventListener('click', () => {
+    googleAccounts.initialize({
+        client_id: CLIENT_ID,
+        callback: handleCredentialResponse,
+        auto_select: false
+    });
+
+    googleAccounts.prompt(); // 顯示 One-Tap / popup 登入
+});
 </script>
 
 </body>
